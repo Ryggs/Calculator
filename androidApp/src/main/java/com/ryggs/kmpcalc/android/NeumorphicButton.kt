@@ -238,9 +238,9 @@ private fun getButtonColor(type: ButtonType, isDark: Boolean): Color {
 
 private fun getButtonTextColor(type: ButtonType, isDark: Boolean): Color {
     return when (type) {
-        ButtonType.Number -> CalculatorColors.lightButtonText
-        ButtonType.Function -> if (isDark) Color(0xFF4A3000) else Color(0xFF1A3A6B)
-        ButtonType.Operator -> if (isDark) Color(0xFF4A3000) else Color(0xFF1A3A6B)
+        ButtonType.Number -> if (isDark) CalculatorColors.darkButtonText else CalculatorColors.lightButtonText
+        ButtonType.Function -> if (isDark) CalculatorColors.darkFunctionText else CalculatorColors.lightFunctionText
+        ButtonType.Operator -> if (isDark) CalculatorColors.darkFunctionText else CalculatorColors.lightFunctionText
         ButtonType.Equals -> Color.White
     }
 }

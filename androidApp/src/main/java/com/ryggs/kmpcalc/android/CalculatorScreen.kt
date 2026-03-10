@@ -18,9 +18,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -36,6 +38,13 @@ fun CalculatorScreen(
     val displayBg = if (isDark) CalculatorColors.darkDisplayBg else CalculatorColors.lightDisplayBg
     val displayText = if (isDark) CalculatorColors.darkDisplayText else CalculatorColors.lightDisplayText
 
+    // Calculate button size based on screen width to fill exactly 4 columns
+    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+    val horizontalPadding = 24.dp
+    val availableWidth = screenWidth - (horizontalPadding * 2)
+    val buttonSpacing = 10.dp
+    val buttonSize = (availableWidth - (buttonSpacing * 3)) / 4
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -44,167 +53,174 @@ fun CalculatorScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
-                .padding(top = 16.dp, bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = horizontalPadding)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(top = 8.dp, bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top section: toggle + display
-            Column(
+            // Theme Toggle
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                horizontalArrangement = Arrangement.Start
             ) {
-                // Theme Toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    ThemeToggle(
-                        isDark = isDark,
-                        onToggle = { isDarkThemeEnabled = !isDark }
-                    )
-                }
+                ThemeToggle(
+                    isDark = isDark,
+                    onToggle = { isDarkThemeEnabled = !isDark }
+                )
+            }
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                // Display with glass shine
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(140.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(displayBg)
-                        .drawWithContent {
-                            drawContent()
-                            // Diagonal glass shine across display
-                            val shinePath = Path().apply {
-                                moveTo(0f, 0f)
-                                lineTo(size.width * 0.7f, 0f)
-                                lineTo(size.width * 0.3f, size.height * 0.6f)
-                                lineTo(0f, size.height * 0.6f)
-                                close()
-                            }
-                            drawPath(
-                                path = shinePath,
-                                brush = Brush.linearGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.12f),
-                                        Color.White.copy(alpha = 0.03f)
-                                    ),
-                                    start = Offset(0f, 0f),
-                                    end = Offset(size.width * 0.5f, size.height * 0.5f)
-                                )
+            // Display — inset LCD look
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f) // Display takes remaining top space
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(displayBg)
+                    .drawWithContent {
+                        drawContent()
+                        // Diagonal glass shine across display
+                        val shinePath = Path().apply {
+                            moveTo(0f, 0f)
+                            lineTo(size.width * 0.65f, 0f)
+                            lineTo(size.width * 0.25f, size.height * 0.55f)
+                            lineTo(0f, size.height * 0.55f)
+                            close()
+                        }
+                        drawPath(
+                            path = shinePath,
+                            brush = Brush.linearGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.10f),
+                                    Color.White.copy(alpha = 0.02f)
+                                ),
+                                start = Offset(0f, 0f),
+                                end = Offset(size.width * 0.45f, size.height * 0.45f)
                             )
-                        }
-                        .padding(16.dp),
-                    contentAlignment = Alignment.BottomEnd
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.End,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = viewModel.expression,
-                            color = displayText.copy(alpha = 0.6f),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Normal,
-                            textAlign = TextAlign.End,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = viewModel.result,
-                            color = displayText,
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.End,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.fillMaxWidth()
                         )
                     }
-                }
-            }
-
-            // Button grid — fills remaining space
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(16.dp),
+                contentAlignment = Alignment.BottomEnd
             ) {
-                val buttonSpacing = 12.dp
-
-                // Row 1: AC, ←, √, ÷
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    NeumorphicButton("AC", ButtonType.Function, isDark, { viewModel.onButtonClick("AC") })
-                    NeumorphicButton("←", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") })
-                    NeumorphicButton("√", ButtonType.Function, isDark, { viewModel.onButtonClick("√") })
-                    NeumorphicButton("÷", ButtonType.Function, isDark, { viewModel.onButtonClick("÷") })
-                }
-
-                // Row 2: 7, 8, 9, −
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    NeumorphicButton("7", ButtonType.Number, isDark, { viewModel.onButtonClick("7") })
-                    NeumorphicButton("8", ButtonType.Number, isDark, { viewModel.onButtonClick("8") })
-                    NeumorphicButton("9", ButtonType.Number, isDark, { viewModel.onButtonClick("9") })
-                    NeumorphicButton("−", ButtonType.Operator, isDark, { viewModel.onButtonClick("−") })
-                }
-
-                // Row 3: 4, 5, 6, +
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    NeumorphicButton("4", ButtonType.Number, isDark, { viewModel.onButtonClick("4") })
-                    NeumorphicButton("5", ButtonType.Number, isDark, { viewModel.onButtonClick("5") })
-                    NeumorphicButton("6", ButtonType.Number, isDark, { viewModel.onButtonClick("6") })
-                    NeumorphicButton("+", ButtonType.Operator, isDark, { viewModel.onButtonClick("+") })
-                }
-
-                // Rows 4 & 5 with tall equals
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(buttonSpacing)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
-                        ) {
-                            NeumorphicButton("1", ButtonType.Number, isDark, { viewModel.onButtonClick("1") })
-                            NeumorphicButton("2", ButtonType.Number, isDark, { viewModel.onButtonClick("2") })
-                            NeumorphicButton("3", ButtonType.Number, isDark, { viewModel.onButtonClick("3") })
-                        }
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
-                        ) {
-                            NeumorphicButton("%", ButtonType.Number, isDark, { viewModel.onButtonClick("%") })
-                            NeumorphicButton("0", ButtonType.Number, isDark, { viewModel.onButtonClick("0") })
-                            NeumorphicButton(".", ButtonType.Number, isDark, { viewModel.onButtonClick(".") })
-                        }
-                    }
-
-                    // Tall equals button = 2 buttons + spacing
-                    NeumorphicButton(
-                        text = "=",
-                        buttonType = ButtonType.Equals,
-                        isDarkTheme = isDark,
-                        onClick = { viewModel.onButtonClick("=") },
-                        width = 76.dp,
-                        height = (76.dp * 2) + buttonSpacing
+                    Text(
+                        text = viewModel.expression,
+                        color = displayText.copy(alpha = 0.5f),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.End,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = viewModel.result,
+                        color = displayText,
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Button grid — compact, no extra space
+            ButtonGrid(
+                isDark = isDark,
+                buttonSize = buttonSize,
+                buttonSpacing = buttonSpacing,
+                viewModel = viewModel
+            )
         }
     }
+}
+
+@Composable
+private fun ButtonGrid(
+    isDark: Boolean,
+    buttonSize: Dp,
+    buttonSpacing: Dp,
+    viewModel: CalculatorViewModel
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(buttonSpacing)
+    ) {
+        // Row 1: AC, ←, √, ÷
+        ButtonRow(buttonSpacing) {
+            NeumorphicButton("AC", ButtonType.Function, isDark, { viewModel.onButtonClick("AC") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("←", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("√", ButtonType.Function, isDark, { viewModel.onButtonClick("√") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("÷", ButtonType.Function, isDark, { viewModel.onButtonClick("÷") }, width = buttonSize, height = buttonSize)
+        }
+
+        // Row 2: 7, 8, 9, −
+        ButtonRow(buttonSpacing) {
+            NeumorphicButton("7", ButtonType.Number, isDark, { viewModel.onButtonClick("7") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("8", ButtonType.Number, isDark, { viewModel.onButtonClick("8") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("9", ButtonType.Number, isDark, { viewModel.onButtonClick("9") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("−", ButtonType.Operator, isDark, { viewModel.onButtonClick("−") }, width = buttonSize, height = buttonSize)
+        }
+
+        // Row 3: 4, 5, 6, +
+        ButtonRow(buttonSpacing) {
+            NeumorphicButton("4", ButtonType.Number, isDark, { viewModel.onButtonClick("4") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("5", ButtonType.Number, isDark, { viewModel.onButtonClick("5") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("6", ButtonType.Number, isDark, { viewModel.onButtonClick("6") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("+", ButtonType.Operator, isDark, { viewModel.onButtonClick("+") }, width = buttonSize, height = buttonSize)
+        }
+
+        // Rows 4 & 5 with tall equals
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            // Left 3 columns: rows 4 and 5
+            Column(
+                verticalArrangement = Arrangement.spacedBy(buttonSpacing)
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(buttonSpacing)) {
+                    NeumorphicButton("1", ButtonType.Number, isDark, { viewModel.onButtonClick("1") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("2", ButtonType.Number, isDark, { viewModel.onButtonClick("2") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("3", ButtonType.Number, isDark, { viewModel.onButtonClick("3") }, width = buttonSize, height = buttonSize)
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(buttonSpacing)) {
+                    NeumorphicButton("%", ButtonType.Number, isDark, { viewModel.onButtonClick("%") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("0", ButtonType.Number, isDark, { viewModel.onButtonClick("0") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton(".", ButtonType.Number, isDark, { viewModel.onButtonClick(".") }, width = buttonSize, height = buttonSize)
+                }
+            }
+
+            // Tall equals button
+            NeumorphicButton(
+                text = "=",
+                buttonType = ButtonType.Equals,
+                isDarkTheme = isDark,
+                onClick = { viewModel.onButtonClick("=") },
+                width = buttonSize,
+                height = (buttonSize * 2) + buttonSpacing
+            )
+        }
+    }
+}
+
+@Composable
+private fun ButtonRow(
+    spacing: Dp,
+    content: @Composable RowScope.() -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(spacing),
+        content = content
+    )
 }
 
 @Composable
