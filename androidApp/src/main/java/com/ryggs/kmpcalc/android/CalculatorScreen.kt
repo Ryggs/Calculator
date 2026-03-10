@@ -1,48 +1,36 @@
 package com.ryggs.kmpcalc.android
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun CalculatorScreen(
     viewModel: CalculatorViewModel = viewModel()
 ) {
-    val isDark = isSystemInDarkTheme()
+    // Add manual theme toggle override
+    var isDarkThemeEnabled by remember { mutableStateOf<Boolean?>(null) }
+    val isDark = isDarkThemeEnabled ?: isSystemInDarkTheme()
 
     val bodyColor = if (isDark) CalculatorColors.darkBody else CalculatorColors.lightBody
     val displayBg = if (isDark) CalculatorColors.darkDisplayBg else CalculatorColors.lightDisplayBg
     val displayText = if (isDark) CalculatorColors.darkDisplayText else CalculatorColors.lightDisplayText
-    val indicatorPill = if (isDark) CalculatorColors.darkIndicatorPill else CalculatorColors.lightIndicatorPill
-    val indicatorDot = if (isDark) CalculatorColors.darkIndicatorDot else CalculatorColors.lightIndicatorDot
 
     Box(
         modifier = Modifier
@@ -50,171 +38,169 @@ fun CalculatorScreen(
             .background(bodyColor),
         contentAlignment = Alignment.Center
     ) {
-        // Calculator body
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 24.dp),
+                .padding(horizontal = 24.dp, vertical = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Power indicator
+            // Theme Toggle Switch
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp, bottom = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start
             ) {
-                Box(
-                    modifier = Modifier
-                        .width(68.dp)
-                        .height(28.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(indicatorPill),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 6.dp)
-                            .size(18.dp)
-                            .clip(CircleShape)
-                            .background(indicatorDot)
-                    )
-                }
+                ThemeToggle(
+                    isDark = isDark,
+                    onToggle = { isDarkThemeEnabled = !isDark }
+                )
             }
 
-            // Display
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Display Box
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(130.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(displayBg)
-                    .drawWithContent {
-                        drawContent()
-                        // Glass shine on display
-                        drawRoundRect(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.15f),
-                                    Color.Transparent
-                                ),
-                                start = Offset(0f, 0f),
-                                end = Offset(size.width * 0.6f, size.height * 0.6f)
-                            ),
-                            cornerRadius = CornerRadius(8.dp.toPx())
-                        )
-                    }
-                    .padding(16.dp),
+                    .padding(20.dp),
                 contentAlignment = Alignment.BottomEnd
             ) {
                 Column(
                     horizontalAlignment = Alignment.End,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Expression
                     Text(
                         text = viewModel.expression,
                         color = displayText.copy(alpha = 0.6f),
-                        fontSize = 20.sp,
+                        fontSize = 24.sp,
                         fontWeight = FontWeight.Normal,
                         textAlign = TextAlign.End,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    // Result
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = viewModel.result,
                         color = displayText,
-                        fontSize = 38.sp,
+                        fontSize = 42.sp,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.End,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // Button grid
-            val buttonSpacing = 10.dp
+            // Button Grid Setup
+            val buttonSpacing = 16.dp
+            val buttonSize = 72.dp
 
-            // Row 1: AC, ←, √, ÷
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+            Column(
+                verticalArrangement = Arrangement.spacedBy(buttonSpacing)
             ) {
-                GlassyButton("AC", ButtonType.Function, isDark, { viewModel.onButtonClick("AC") })
-                GlassyButton("⌫", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") })
-                GlassyButton("√", ButtonType.Function, isDark, { viewModel.onButtonClick("√") })
-                GlassyButton("÷", ButtonType.Function, isDark, { viewModel.onButtonClick("÷") })
-            }
-
-            Spacer(modifier = Modifier.height(buttonSpacing))
-
-            // Row 2: 7, 8, 9, −
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                GlassyButton("7", ButtonType.Number, isDark, { viewModel.onButtonClick("7") })
-                GlassyButton("8", ButtonType.Number, isDark, { viewModel.onButtonClick("8") })
-                GlassyButton("9", ButtonType.Number, isDark, { viewModel.onButtonClick("9") })
-                GlassyButton("−", ButtonType.Operator, isDark, { viewModel.onButtonClick("−") })
-            }
-
-            Spacer(modifier = Modifier.height(buttonSpacing))
-
-            // Row 3: 4, 5, 6, +
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                GlassyButton("4", ButtonType.Number, isDark, { viewModel.onButtonClick("4") })
-                GlassyButton("5", ButtonType.Number, isDark, { viewModel.onButtonClick("5") })
-                GlassyButton("6", ButtonType.Number, isDark, { viewModel.onButtonClick("6") })
-                GlassyButton("+", ButtonType.Operator, isDark, { viewModel.onButtonClick("+") })
-            }
-
-            Spacer(modifier = Modifier.height(buttonSpacing))
-
-            // Row 4 & 5: 1,2,3 / %,0,. with tall = button
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                // Left side: two rows of 3 buttons
-                Column {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
-                    ) {
-                        GlassyButton("1", ButtonType.Number, isDark, { viewModel.onButtonClick("1") })
-                        GlassyButton("2", ButtonType.Number, isDark, { viewModel.onButtonClick("2") })
-                        GlassyButton("3", ButtonType.Number, isDark, { viewModel.onButtonClick("3") })
-                    }
-                    Spacer(modifier = Modifier.height(buttonSpacing))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
-                    ) {
-                        GlassyButton("%", ButtonType.Number, isDark, { viewModel.onButtonClick("%") })
-                        GlassyButton("0", ButtonType.Number, isDark, { viewModel.onButtonClick("0") })
-                        GlassyButton(".", ButtonType.Number, isDark, { viewModel.onButtonClick(".") })
-                    }
+                // Row 1
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    NeumorphicButton("AC", ButtonType.Function, isDark, { viewModel.onButtonClick("AC") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("←", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("√", ButtonType.Function, isDark, { viewModel.onButtonClick("√") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("÷", ButtonType.Function, isDark, { viewModel.onButtonClick("÷") }, width = buttonSize, height = buttonSize)
                 }
 
-                // Tall equals button
-                GlassyButton(
-                    text = "=",
-                    buttonType = ButtonType.Equals,
-                    isDarkTheme = isDark,
-                    onClick = { viewModel.onButtonClick("=") },
-                    width = 76.dp,
-                    height = (76.dp * 2) + buttonSpacing
-                )
+                // Row 2
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    NeumorphicButton("7", ButtonType.Number, isDark, { viewModel.onButtonClick("7") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("8", ButtonType.Number, isDark, { viewModel.onButtonClick("8") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("9", ButtonType.Number, isDark, { viewModel.onButtonClick("9") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("−", ButtonType.Operator, isDark, { viewModel.onButtonClick("−") }, width = buttonSize, height = buttonSize)
+                }
+
+                // Row 3
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    NeumorphicButton("4", ButtonType.Number, isDark, { viewModel.onButtonClick("4") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("5", ButtonType.Number, isDark, { viewModel.onButtonClick("5") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("6", ButtonType.Number, isDark, { viewModel.onButtonClick("6") }, width = buttonSize, height = buttonSize)
+                    NeumorphicButton("+", ButtonType.Operator, isDark, { viewModel.onButtonClick("+") }, width = buttonSize, height = buttonSize)
+                }
+
+                // Row 4 & 5 Layout (Tall Equals Button)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(buttonSpacing)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                        ) {
+                            NeumorphicButton("1", ButtonType.Number, isDark, { viewModel.onButtonClick("1") }, width = buttonSize, height = buttonSize)
+                            NeumorphicButton("2", ButtonType.Number, isDark, { viewModel.onButtonClick("2") }, width = buttonSize, height = buttonSize)
+                            NeumorphicButton("3", ButtonType.Number, isDark, { viewModel.onButtonClick("3") }, width = buttonSize, height = buttonSize)
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
+                        ) {
+                            NeumorphicButton("%", ButtonType.Number, isDark, { viewModel.onButtonClick("%") }, width = buttonSize, height = buttonSize)
+                            NeumorphicButton("0", ButtonType.Number, isDark, { viewModel.onButtonClick("0") }, width = buttonSize, height = buttonSize)
+                            NeumorphicButton(".", ButtonType.Number, isDark, { viewModel.onButtonClick(".") }, width = buttonSize, height = buttonSize)
+                        }
+                    }
+
+                    // Tall Equals Button spans exactly 2 heights + 1 spacing
+                    NeumorphicButton(
+                        text = "=",
+                        buttonType = ButtonType.Equals,
+                        isDarkTheme = isDark,
+                        onClick = { viewModel.onButtonClick("=") },
+                        width = buttonSize,
+                        height = (buttonSize * 2) + buttonSpacing
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+fun ThemeToggle(isDark: Boolean, onToggle: () -> Unit) {
+    val trackColor = if (isDark) Color(0xFFD9D9D9) else Color(0xFF4B4B4B)
+    val thumbColor = if (isDark) Color(0xFF4B4B4B) else Color(0xFFF3B927)
+
+    // FIX: Animate a float between -1f (left) and 1f (right)
+    val bias by animateFloatAsState(
+        targetValue = if (isDark) -1f else 1f,
+        label = "toggleAnimation"
+    )
+
+    Box(
+        modifier = Modifier
+            .width(64.dp)
+            .height(32.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(trackColor)
+            .clickable { onToggle() }
+            .padding(4.dp),
+        // FIX: Apply the animated float to a BiasAlignment
+        contentAlignment = BiasAlignment(horizontalBias = bias, verticalBias = 0f)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(thumbColor)
+        )
     }
 }
