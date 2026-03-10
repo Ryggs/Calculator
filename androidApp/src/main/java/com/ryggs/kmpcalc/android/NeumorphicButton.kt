@@ -120,14 +120,17 @@ fun NeumorphicButton(
                 }
             }
             .clip(shape)
-            // Gradient background for 3D depth
+            // Gradient background — strong top-to-bottom for convex glass dome
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        baseColor.lighten(0.08f),
+                        baseColor.lighten(0.18f),
+                        baseColor.lighten(0.05f),
                         baseColor,
-                        baseColor.darken(0.06f)
-                    )
+                        baseColor.darken(0.12f)
+                    ),
+                    startY = 0f,
+                    endY = Float.POSITIVE_INFINITY
                 )
             )
             // Glass overlay drawn on top of content
@@ -151,79 +154,115 @@ fun NeumorphicButton(
     }
 }
 
-/**
- * Draws the glassy highlight effects on top of the button:
- * - Curved top-left shine (the main glass reflection)
- * - Small specular highlight dot
- * - Bottom edge reflected light
- * - Gradient border stroke for glass edge
- */
 private fun DrawScope.drawGlassOverlay(isPressed: Boolean) {
     val w = size.width
     val h = size.height
 
+    // === Layer 1: Full top-half gloss (the big dome reflection) ===
+    // This is the main "glass" look — a bright wash across the top ~45%
+    val glossPath = Path().apply {
+        moveTo(0f, 0f)
+        lineTo(w, 0f)
+        lineTo(w, h * 0.20f)
+        quadraticBezierTo(w * 0.5f, h * 0.52f, 0f, h * 0.38f)
+        close()
+    }
+    drawPath(
+        path = glossPath,
+        brush = Brush.verticalGradient(
+            colors = listOf(
+                Color.White.copy(alpha = if (isPressed) 0.15f else 0.40f),
+                Color.White.copy(alpha = if (isPressed) 0.02f else 0.05f)
+            ),
+            startY = 0f,
+            endY = h * 0.50f
+        )
+    )
+
     if (!isPressed) {
-        // Main glass highlight — curved shine from top-left
-        val highlightPath = Path().apply {
+        // === Layer 2: Curved highlight accent (top-left crescent) ===
+        val crescentPath = Path().apply {
             moveTo(0f, 0f)
-            lineTo(w * 0.65f, 0f)
-            quadraticBezierTo(w * 0.25f, h * 0.22f, 0f, h * 0.45f)
+            lineTo(w * 0.55f, 0f)
+            quadraticBezierTo(w * 0.18f, h * 0.20f, 0f, h * 0.35f)
             close()
         }
         drawPath(
-            path = highlightPath,
+            path = crescentPath,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.50f),
-                    Color.White.copy(alpha = 0.05f)
+                    Color.White.copy(alpha = 0.60f),
+                    Color.White.copy(alpha = 0.0f)
                 ),
                 start = Offset(0f, 0f),
-                end = Offset(w * 0.45f, h * 0.35f)
+                end = Offset(w * 0.35f, h * 0.30f)
             )
         )
 
-        // Small specular highlight dot (bright reflection point)
+        // === Layer 3: Bright specular hotspot ===
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.7f),
+                    Color.White.copy(alpha = 0.85f),
+                    Color.White.copy(alpha = 0.25f),
                     Color.White.copy(alpha = 0f)
                 ),
-                center = Offset(w * 0.25f, h * 0.18f),
-                radius = w * 0.10f
+                center = Offset(w * 0.27f, h * 0.17f),
+                radius = w * 0.13f
             ),
-            center = Offset(w * 0.25f, h * 0.18f),
-            radius = w * 0.10f
+            center = Offset(w * 0.27f, h * 0.17f),
+            radius = w * 0.13f
+        )
+
+        // === Layer 4: Secondary soft reflection (lower-right) ===
+        val secondaryPath = Path().apply {
+            moveTo(w, h)
+            lineTo(w * 0.50f, h)
+            quadraticBezierTo(w * 0.75f, h * 0.78f, w, h * 0.70f)
+            close()
+        }
+        drawPath(
+            path = secondaryPath,
+            brush = Brush.linearGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.0f),
+                    Color.White.copy(alpha = 0.12f)
+                ),
+                start = Offset(w * 0.50f, h * 0.85f),
+                end = Offset(w, h)
+            )
         )
     }
 
-    // Bottom edge reflected light
+    // === Layer 5: Bottom edge reflected light ===
     drawRect(
         brush = Brush.verticalGradient(
             colors = listOf(
                 Color.Transparent,
-                Color.White.copy(alpha = 0.10f)
+                Color.White.copy(alpha = 0.15f)
             ),
-            startY = h * 0.88f,
+            startY = h * 0.85f,
             endY = h
         ),
-        topLeft = Offset(0f, h * 0.88f),
-        size = Size(w, h * 0.12f)
+        topLeft = Offset(0f, h * 0.85f),
+        size = Size(w, h * 0.15f)
     )
 
-    // Gradient border stroke — gives the glass edge look
+    // === Layer 6: Glass rim border ===
+    // Top-left bright, bottom-right dark — like light hitting a glass edge
     drawRoundRect(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.35f),
-                Color.White.copy(alpha = 0.05f),
-                Color.Black.copy(alpha = 0.08f)
+                Color.White.copy(alpha = 0.50f),
+                Color.White.copy(alpha = 0.10f),
+                Color.Transparent,
+                Color.Black.copy(alpha = 0.10f)
             ),
             start = Offset(0f, 0f),
             end = Offset(w, h)
         ),
         cornerRadius = androidx.compose.ui.geometry.CornerRadius(14.dp.toPx()),
-        style = Stroke(width = 1.5f)
+        style = Stroke(width = 2f)
     )
 }
 
