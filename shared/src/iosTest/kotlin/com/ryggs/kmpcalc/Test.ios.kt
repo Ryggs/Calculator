@@ -3,10 +3,13 @@ package com.ryggs.kmpcalc
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class IosGreetingTest {
+class IosCalculatorTest {
+
+    private val calculator = Calculator()
 
     @Test
-    fun testExample() {
-        assertTrue(Greeting().greet().contains("iOS"), "Check iOS is mentioned")
+    fun testBasicExpression() {
+        val result = calculator.evaluateExpression("5+5")
+        assertTrue(result == 10.0, "5+5 should equal 10")
     }
 }
