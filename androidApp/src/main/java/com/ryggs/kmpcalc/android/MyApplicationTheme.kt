@@ -1,55 +1,63 @@
 package com.ryggs.kmpcalc.android
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+
+object CalculatorColors {
+    // Light Theme — from Figma
+    val lightBody = Color(0xFFE4E4E4)
+    val lightDisplayBg = Color(0xFFAAAAAA)
+    val lightDisplayText = Color(0xFF2D2D2D)
+    val lightNumberButton = Color(0xFFE4E4E4)
+    val lightFunctionButton = Color(0xFF6496E0)
+    val lightOperatorButton = Color(0xFF6496E0)
+    val lightEqualsButton = Color(0xFFF56B7B)
+    val lightButtonText = Color(0xFF333333)
+    val lightFunctionText = Color(0xFF1A3060)
+
+    // Light Shadows
+    val lightTopLeftShadow = Color(0xFFFAFAFA)
+    val lightBottomRightShadow = Color(0xFFBEBEBE)
+
+    // Dark Theme — from Figma
+    val darkBody = Color(0xFF3D3D3D)
+    val darkDisplayBg = Color(0xFF909090)
+    val darkDisplayText = Color(0xFF2D2D2D)
+    val darkNumberButton = Color(0xFFDCDCDC)
+    val darkFunctionButton = Color(0xFFDEA820)
+    val darkOperatorButton = Color(0xFFDEA820)
+    val darkEqualsButton = Color(0xFFF56B7B)
+    val darkButtonText = Color(0xFF333333)
+    val darkFunctionText = Color(0xFF4A3000)
+
+    // Dark Shadows
+    val darkTopLeftShadow = Color(0xFF505050)
+    val darkBottomRightShadow = Color(0xFF262626)
+}
 
 @Composable
-fun MyApplicationTheme(
+fun CalculatorTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) {
         darkColorScheme(
-            primary = Color(0xFFBB86FC),
-            secondary = Color(0xFF03DAC5),
-            tertiary = Color(0xFF3700B3)
+            background = CalculatorColors.darkBody,
+            surface = CalculatorColors.darkBody
         )
     } else {
         lightColorScheme(
-            primary = Color(0xFF6200EE),
-            secondary = Color(0xFF03DAC5),
-            tertiary = Color(0xFF3700B3)
+            background = CalculatorColors.lightBody,
+            surface = CalculatorColors.lightBody
         )
     }
-    val typography = Typography(
-        bodyMedium = TextStyle(
-            fontFamily = FontFamily.Default,
-            fontWeight = FontWeight.Normal,
-            fontSize = 16.sp
-        )
-    )
-    val shapes = Shapes(
-        small = RoundedCornerShape(4.dp),
-        medium = RoundedCornerShape(4.dp),
-        large = RoundedCornerShape(0.dp)
-    )
 
     MaterialTheme(
         colorScheme = colors,
-        typography = typography,
-        shapes = shapes,
         content = content
     )
 }
