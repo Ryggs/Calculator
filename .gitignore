@@ -2,6 +2,8 @@
 .gradle
 .idea
 .DS_Store
+.keystore
+.jks
 build
 captures
 .externalNativeBuild
