@@ -32,4 +32,4 @@ These changes are effective immediately after they are posted on this page.
 
 ## 7. Contact Us
 
-If you have any questions or suggestions about my Privacy Policy, do not hesitate to contact me at: [https://x.com/josh_ryggs](https://x.com/josh_ryggs).
+If you have any questions or suggestions about my Privacy Policy, do not hesitate to contact me at: [Josh Ryggs](https://x.com/josh_ryggs).
