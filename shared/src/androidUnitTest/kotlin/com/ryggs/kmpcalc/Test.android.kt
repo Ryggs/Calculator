@@ -15,7 +15,7 @@ class AndroidCalculatorTest {
 
     @Test
     fun testPlatformName() {
-        val platform = Platform()
+        val platform = getPlatform()
         assert(platform.name.contains("Android"))
     }
 }
