@@ -74,7 +74,7 @@ class Calculator {
             if (pos[0] < tokens.size && tokens[pos[0]] == ")") pos[0]++
             return result
         }
-        if (pos[0] >= tokens.size) return 0.0
+        if (pos[0] >= tokens.size) return Double.NaN
         return tokens[pos[0]++].toDoubleOrNull() ?: Double.NaN
     }
 }
