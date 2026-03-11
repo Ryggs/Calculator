@@ -1,48 +1,35 @@
 # Privacy Policy
 
-**Last updated:** March 11, 2026
+**Effective Date:** March 11, 2026
 
-## Introduction
+## 1. Introduction
 
-This Privacy Policy describes how the **Calculator** app ("we", "our", or "the App") handles user information. The App is developed by Ryggs and is available on the Google Play Store under the package name `com.ryggs.kmpcalc.android`.
+Josh ("Developer", "I", "me", or "my") built the Calculator app as a Free app. This SERVICE is provided by me at no cost and is intended for use as is.
 
-## Information We Collect
+This page is used to inform visitors regarding my policies with the collection, use, and disclosure of Personal Information if anyone decided to use my Service.
 
-**We do not collect any personal data.**
+## 2. Information Collection and Use
 
-The Calculator app is a fully offline utility application. It does not:
+The Calculator app is designed to respect your privacy. I do not collect, store, or share any personal data, usage data, or device information. All mathematical calculations and operations performed within the app are processed locally on your device. The app operates entirely offline and does not require an internet connection to function.
 
-- Collect, store, or transmit any personal information
-- Require user accounts or registration
-- Access the internet or any network services
-- Use analytics, tracking, or advertising SDKs
-- Access device sensors, contacts, location, camera, microphone, or files
-- Use cookies or similar tracking technologies
+## 3. Permissions
 
-All calculations are performed locally on your device. No data ever leaves your device.
+The app does not require any special or dangerous permissions (such as access to your camera, contacts, location, or storage) to operate.
 
-## Third-Party Services
+## 4. Third-Party Services
 
-The App does not integrate with any third-party services, APIs, or SDKs that collect user data.
+The app does not use any third-party services, analytics, or advertising frameworks that may collect information used to identify you.
 
-## Data Sharing
+## 5. Children's Privacy
 
-Since we do not collect any data, we do not share any data with third parties.
+These Services do not address anyone under the age of 13. I do not knowingly collect personally identifiable information from children under 13 years of age. Since the app collects no data whatsoever, it is completely safe for use by children.
 
-## Children's Privacy
+## 6. Changes to This Privacy Policy
 
-The App does not collect personal information from anyone, including children under the age of 13. The App is safe for use by all age groups.
+I may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. I will notify you of any changes by posting the new Privacy Policy on this page.
 
-## Data Security
+These changes are effective immediately after they are posted on this page.
 
-As no personal data is collected or stored, there is no user data at risk. The App operates entirely offline on your device.
+## 7. Contact Us
 
-## Changes to This Privacy Policy
-
-We may update this Privacy Policy from time to time. Any changes will be reflected by updating the "Last updated" date at the top of this document. We encourage you to review this Privacy Policy periodically.
-
-## Contact Us
-
-If you have any questions or concerns about this Privacy Policy, please contact us by opening an issue on our GitHub repository:
-
-https://github.com/Ryggs/Calculator/issues
+If you have any questions or suggestions about my Privacy Policy, do not hesitate to contact me at: [Insert Your Developer Email Address Here].
