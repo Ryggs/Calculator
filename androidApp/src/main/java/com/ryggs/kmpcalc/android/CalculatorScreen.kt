@@ -220,7 +220,7 @@ private fun DisplayPanel(
                 Text(
                     text = result,
                     color = displayText,
-                    fontSize = 52.sp,
+                    fontSize = 72.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.End,
                     maxLines = 1,

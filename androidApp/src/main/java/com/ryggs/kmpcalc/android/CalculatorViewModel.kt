@@ -82,6 +82,8 @@ class CalculatorViewModel : ViewModel() {
 
     private fun appendOperator(op: String) {
         if (hasEvaluated) { hasEvaluated = false; isResult = false }
+        // Don't allow an operator right after the (-  prefix (no digit typed yet)
+        if (expression.endsWith("(-")) return
         if (expression.isNotEmpty() && expression != "Error") {
             val last = expression.last()
             if (last == '+' || last == '−' || last == '×' || last == '÷') {
@@ -175,8 +177,8 @@ class CalculatorViewModel : ViewModel() {
     private fun captureLastOperatorAndOperand() {
         val expr = expression
 
-        // Check if expression ends with (-digits) — negative number in parens
-        val negParenMatch = Regex("""\(\-\d+\.?\d*\)$""").find(expr)
+        // Check if expression ends with (-digits — negative number (no closing paren)
+        val negParenMatch = Regex("""\(\-\d+\.?\d*$""").find(expr)
         if (negParenMatch != null) {
             val opIdx = negParenMatch.range.first - 1
             if (opIdx >= 0) {
@@ -199,23 +201,42 @@ class CalculatorViewModel : ViewModel() {
     }
 
     private fun toggleSign() {
-        if (expression.isEmpty()) return
+        fun clearEval() { if (hasEvaluated) { hasEvaluated = false; isResult = false } }
 
-        // Case 1: expression ends with (-digits) → unwrap to plain digits
-        val negParenRegex = Regex("""\(\-(\d+\.?\d*)\)$""")
-        val negMatch = negParenRegex.find(expression)
-        if (negMatch != null) {
-            expression = expression.removeRange(negMatch.range) + negMatch.groupValues[1]
-            if (hasEvaluated) { hasEvaluated = false; isResult = false }
+        // Empty expression → start negative entry
+        if (expression.isEmpty()) {
+            expression = "(-"
             return
         }
 
-        // Case 2: expression ends with plain digits → wrap as (-digits)
+        // Expression is just the open prefix with no digits yet → remove it
+        if (expression == "(-") {
+            expression = ""
+            return
+        }
+
+        // Ends with (-digits (no closing paren) → unwrap to plain digits
+        val negRegex = Regex("""\(\-(\d+\.?\d*)$""")
+        val negMatch = negRegex.find(expression)
+        if (negMatch != null) {
+            expression = expression.removeRange(negMatch.range) + negMatch.groupValues[1]
+            clearEval()
+            return
+        }
+
+        // Ends with (- but has digits somewhere before (shouldn't normally happen) → remove prefix
+        if (expression.endsWith("(-")) {
+            expression = expression.dropLast(2)
+            clearEval()
+            return
+        }
+
+        // Ends with plain digits → prefix with (-  (no closing paren)
         val posRegex = Regex("""\d+\.?\d*$""")
         val posMatch = posRegex.find(expression)
         if (posMatch != null) {
-            expression = expression.removeRange(posMatch.range) + "(-${posMatch.value})"
-            if (hasEvaluated) { hasEvaluated = false; isResult = false }
+            expression = expression.removeRange(posMatch.range) + "(-${posMatch.value}"
+            clearEval()
             return
         }
     }
