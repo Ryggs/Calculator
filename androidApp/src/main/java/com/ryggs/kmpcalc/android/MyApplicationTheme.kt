@@ -37,6 +37,10 @@ object CalculatorColors {
     // Dark Shadows
     val darkTopLeftShadow = Color(0xFF505050)
     val darkBottomRightShadow = Color(0xFF262626)
+
+    // AC / Clear button — same vibrant red in both themes so it always stands out
+    val clearButton = Color(0xFFD32F2F)
+    val clearButtonText = Color.White
 }
 
 @Composable

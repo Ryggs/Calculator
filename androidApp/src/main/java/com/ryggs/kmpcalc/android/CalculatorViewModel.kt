@@ -18,6 +18,8 @@ class CalculatorViewModel : ViewModel() {
 
     private var lastResult: String = ""
     private var hasEvaluated = false
+    private var lastOperator: String = ""
+    private var lastOperand: String = ""
 
     fun onButtonClick(value: String) {
         when (value) {
@@ -25,7 +27,8 @@ class CalculatorViewModel : ViewModel() {
             "⌫" -> backspace()
             "√" -> squareRoot()
             "=" -> evaluate()
-            "%"-> percentage()
+            "%" -> percentage()
+            "+/-" -> toggleSign()
             "+", "−", "×", "÷" -> appendOperator(value)
             else -> appendDigit(value)
         }
@@ -35,6 +38,8 @@ class CalculatorViewModel : ViewModel() {
         expression = ""
         result = ""
         lastResult = ""
+        lastOperator = ""
+        lastOperand = ""
         hasEvaluated = false
     }
 
@@ -122,7 +127,23 @@ class CalculatorViewModel : ViewModel() {
     }
 
     private fun evaluate() {
-        if (hasEvaluated) return // Prevent redundant evaluations
+        if (hasEvaluated) {
+            // Repeated =: reapply the last operator and operand
+            if (lastOperator.isNotEmpty() && lastOperand.isNotEmpty() && result != "Error") {
+                expression = result + lastOperator + lastOperand
+                try {
+                    val value = evaluateCurrentExpression()
+                    result = formatResult(value)
+                    lastResult = result
+                } catch (e: Exception) {
+                    result = "Error"
+                }
+            }
+            return
+        }
+
+        // Capture last operator and operand before evaluating
+        captureLastOperatorAndOperand()
 
         try {
             val value = evaluateCurrentExpression()
@@ -135,6 +156,40 @@ class CalculatorViewModel : ViewModel() {
         } catch (e: Exception) {
             result = "Error"
             hasEvaluated = true
+        }
+    }
+
+    private fun captureLastOperatorAndOperand() {
+        // Find the last binary operator and the operand that follows it
+        val expr = expression
+        var i = expr.length - 1
+        // Walk back past trailing digits/decimals to find the last operand
+        while (i >= 0 && (expr[i].isDigit() || expr[i] == '.')) i--
+        if (i > 0 && (expr[i] == '+' || expr[i] == '−' || expr[i] == '×' || expr[i] == '÷')) {
+            lastOperator = expr[i].toString()
+            lastOperand = expr.substring(i + 1)
+        }
+    }
+
+    private fun toggleSign() {
+        if (hasEvaluated && result.isNotEmpty() && result != "Error") {
+            val bd = result.toBigDecimalOrNull() ?: return
+            result = formatResult(bd.negate())
+            expression = result
+            hasEvaluated = false
+            return
+        }
+        if (expression.isEmpty()) return
+        // Find last operator position to isolate the last number
+        var i = expression.length - 1
+        while (i >= 0 && (expression[i].isDigit() || expression[i] == '.')) i--
+        val prefix = expression.substring(0, i + 1)
+        val lastNum = expression.substring(i + 1)
+        if (lastNum.isEmpty()) return
+        expression = if (lastNum.startsWith("−")) {
+            prefix + lastNum.removePrefix("−")
+        } else {
+            prefix + "−" + lastNum
         }
     }
 
