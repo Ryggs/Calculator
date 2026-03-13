@@ -86,11 +86,15 @@ fun CalculatorScreen(
 
             Spacer(modifier = Modifier.height(if (isLandscape) 6.dp else 12.dp))
 
-            // Display — portrait uses weight(1f) to fill remaining space
+            // When isResult=true, show expression large (it holds the answer).
+            // When typing, show expression on top and result (live) on bottom.
+            val displayTop = if (viewModel.isResult) "" else viewModel.expression
+            val displayBottom = if (viewModel.isResult) viewModel.expression else viewModel.result
+
             if (isLandscape) {
                 DisplayPanel(
-                    expression = viewModel.expression,
-                    result = viewModel.result,
+                    expression = displayTop,
+                    result = displayBottom,
                     isLandscape = true,
                     displayBg = displayBg,
                     displayText = displayText,
@@ -98,8 +102,8 @@ fun CalculatorScreen(
                 )
             } else {
                 DisplayPanel(
-                    expression = viewModel.expression,
-                    result = viewModel.result,
+                    expression = displayTop,
+                    result = displayBottom,
                     isLandscape = false,
                     displayBg = displayBg,
                     displayText = displayText,

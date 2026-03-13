@@ -16,6 +16,10 @@ class CalculatorViewModel : ViewModel() {
     var result by mutableStateOf("")
         private set
 
+    // True when the display is showing an evaluated result (not mid-expression)
+    var isResult by mutableStateOf(false)
+        private set
+
     private var lastResult: String = ""
     private var hasEvaluated = false
     private var lastOperator: String = ""
@@ -41,15 +45,11 @@ class CalculatorViewModel : ViewModel() {
         lastOperator = ""
         lastOperand = ""
         hasEvaluated = false
+        isResult = false
     }
 
     private fun backspace() {
-        if (hasEvaluated) {
-            // After evaluation, backspace clears
-            expression = result
-            result = ""
-            hasEvaluated = false
-        }
+        if (hasEvaluated) { hasEvaluated = false; isResult = false }
         if (expression.isNotEmpty()) {
             expression = expression.dropLast(1)
         }
@@ -61,6 +61,7 @@ class CalculatorViewModel : ViewModel() {
             expression = if (digit == ".") "0." else digit
             result = ""
             hasEvaluated = false
+            isResult = false
             return
         }
 
@@ -80,11 +81,8 @@ class CalculatorViewModel : ViewModel() {
     }
 
     private fun appendOperator(op: String) {
-        if (hasEvaluated && result.isNotEmpty() && result != "Error") {
-            expression = result + op
-            result = ""
-            hasEvaluated = false
-        } else if (expression.isNotEmpty()) {
+        if (hasEvaluated) { hasEvaluated = false; isResult = false }
+        if (expression.isNotEmpty() && expression != "Error") {
             val last = expression.last()
             if (last == '+' || last == '−' || last == '×' || last == '÷') {
                 expression = expression.dropLast(1) + op
@@ -98,18 +96,22 @@ class CalculatorViewModel : ViewModel() {
         try {
             val value = evaluateCurrentExpression()
             if (value >= BigDecimal.ZERO) {
-                // Safely convert back and forth for the square root function
                 val sqrtResult = BigDecimal.valueOf(sqrt(value.toDouble()))
-                result = formatResult(sqrtResult)
-                expression = "√(${expression})"
+                expression = formatResult(sqrtResult)
+                result = ""
                 hasEvaluated = true
+                isResult = true
             } else {
-                result = "Error"
+                expression = "Error"
+                result = ""
                 hasEvaluated = true
+                isResult = true
             }
         } catch (e: Exception) {
-            result = "Error"
+            expression = "Error"
+            result = ""
             hasEvaluated = true
+            isResult = true
         }
     }
 
@@ -117,79 +119,104 @@ class CalculatorViewModel : ViewModel() {
         try {
             val value = evaluateCurrentExpression()
             val percentResult = value.divide(BigDecimal("100"), 10, RoundingMode.HALF_UP).stripTrailingZeros()
-            result = formatResult(percentResult)
-            expression = "(${expression})%"
+            expression = formatResult(percentResult)
+            result = ""
             hasEvaluated = true
+            isResult = true
         } catch (e: Exception) {
-            result = "Error"
+            expression = "Error"
+            result = ""
             hasEvaluated = true
+            isResult = true
         }
     }
 
     private fun evaluate() {
         if (hasEvaluated) {
-            // Repeated =: reapply the last operator and operand
-            if (lastOperator.isNotEmpty() && lastOperand.isNotEmpty() && result != "Error") {
-                expression = result + lastOperator + lastOperand
+            // Repeated =: reapply last operator+operand to the current expression value
+            if (lastOperator.isNotEmpty() && lastOperand.isNotEmpty() && expression != "Error") {
+                expression = expression + lastOperator + lastOperand
                 try {
                     val value = evaluateCurrentExpression()
-                    result = formatResult(value)
-                    lastResult = result
+                    expression = formatResult(value)
+                    result = ""
+                    isResult = true
                 } catch (e: Exception) {
-                    result = "Error"
+                    expression = "Error"
+                    result = ""
+                    isResult = true
                 }
             }
             return
         }
 
-        // Capture last operator and operand before evaluating
         captureLastOperatorAndOperand()
 
         try {
             val value = evaluateCurrentExpression()
-            result = formatResult(value)
-            lastResult = result
+            expression = formatResult(value)
+            result = ""
+            lastResult = expression
             hasEvaluated = true
+            isResult = true
         } catch (e: ArithmeticException) {
-            result = "Error"
+            expression = "Error"
+            result = ""
             hasEvaluated = true
+            isResult = true
         } catch (e: Exception) {
-            result = "Error"
+            expression = "Error"
+            result = ""
             hasEvaluated = true
+            isResult = true
         }
     }
 
     private fun captureLastOperatorAndOperand() {
-        // Find the last binary operator and the operand that follows it
         val expr = expression
+
+        // Check if expression ends with (-digits) — negative number in parens
+        val negParenMatch = Regex("""\(\-\d+\.?\d*\)$""").find(expr)
+        if (negParenMatch != null) {
+            val opIdx = negParenMatch.range.first - 1
+            if (opIdx >= 0) {
+                val op = expr[opIdx]
+                if (op == '+' || op == '−' || op == '×' || op == '÷') {
+                    lastOperator = op.toString()
+                    lastOperand = expr.substring(negParenMatch.range.first)
+                }
+            }
+            return
+        }
+
+        // Regular number at the end
         var i = expr.length - 1
-        // Walk back past trailing digits/decimals to find the last operand
         while (i >= 0 && (expr[i].isDigit() || expr[i] == '.')) i--
-        if (i > 0 && (expr[i] == '+' || expr[i] == '−' || expr[i] == '×' || expr[i] == '÷')) {
+        if (i >= 0 && (expr[i] == '+' || expr[i] == '−' || expr[i] == '×' || expr[i] == '÷')) {
             lastOperator = expr[i].toString()
             lastOperand = expr.substring(i + 1)
         }
     }
 
     private fun toggleSign() {
-        if (hasEvaluated && result.isNotEmpty() && result != "Error") {
-            val bd = result.toBigDecimalOrNull() ?: return
-            result = formatResult(bd.negate())
-            expression = result
-            hasEvaluated = false
+        if (expression.isEmpty()) return
+
+        // Case 1: expression ends with (-digits) → unwrap to plain digits
+        val negParenRegex = Regex("""\(\-(\d+\.?\d*)\)$""")
+        val negMatch = negParenRegex.find(expression)
+        if (negMatch != null) {
+            expression = expression.removeRange(negMatch.range) + negMatch.groupValues[1]
+            if (hasEvaluated) { hasEvaluated = false; isResult = false }
             return
         }
-        if (expression.isEmpty()) return
-        // Find last operator position to isolate the last number
-        var i = expression.length - 1
-        while (i >= 0 && (expression[i].isDigit() || expression[i] == '.')) i--
-        val prefix = expression.substring(0, i + 1)
-        val lastNum = expression.substring(i + 1)
-        if (lastNum.isEmpty()) return
-        expression = if (lastNum.startsWith("−")) {
-            prefix + lastNum.removePrefix("−")
-        } else {
-            prefix + "−" + lastNum
+
+        // Case 2: expression ends with plain digits → wrap as (-digits)
+        val posRegex = Regex("""\d+\.?\d*$""")
+        val posMatch = posRegex.find(expression)
+        if (posMatch != null) {
+            expression = expression.removeRange(posMatch.range) + "(-${posMatch.value})"
+            if (hasEvaluated) { hasEvaluated = false; isResult = false }
+            return
         }
     }
 
