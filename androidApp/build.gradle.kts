@@ -44,4 +44,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     debugImplementation(libs.compose.ui.tooling)
+
+    testImplementation("junit:junit:4.13.2")
 }
