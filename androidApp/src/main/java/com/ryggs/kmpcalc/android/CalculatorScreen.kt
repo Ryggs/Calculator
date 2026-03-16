@@ -248,7 +248,7 @@ private fun ButtonGrid(
         ) {
             // Row 1: AC, ←, √, ÷
             ButtonRow(buttonSpacing) {
-                NeumorphicButton("AC", ButtonType.Clear,    isDark, { viewModel.onButtonClick("AC") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("AC", ButtonType.Function,  isDark, { viewModel.onButtonClick("AC") }, width = buttonSize, height = buttonSize)
                 NeumorphicButton("←", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") },  width = buttonSize, height = buttonSize)
                 NeumorphicButton("√",  ButtonType.Function, isDark, { viewModel.onButtonClick("√") },  width = buttonSize, height = buttonSize)
                 NeumorphicButton("÷",  ButtonType.Operator, isDark, { viewModel.onButtonClick("÷") },  width = buttonSize, height = buttonSize)

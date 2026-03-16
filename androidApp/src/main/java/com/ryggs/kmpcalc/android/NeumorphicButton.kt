@@ -289,39 +289,57 @@ private fun DrawScope.drawGlassOverlay(isPressed: Boolean) {
         size = Size(w, h * 0.18f)
     )
 
-    // === Layer 8: Glass rim border — polished edge ===
-    // Top-left bright, bottom-right dark — like light hitting a glass edge
+    // === Layer 8: Outer chrome border — thick metallic rim ===
+    // Dark surround to simulate a chrome/silver bezel
     drawRoundRect(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.65f),
-                Color.White.copy(alpha = 0.20f),
-                Color.Transparent,
-                Color.Black.copy(alpha = 0.15f)
+                Color(0xFFC0C0C0).copy(alpha = 0.90f),
+                Color(0xFF888888).copy(alpha = 0.70f),
+                Color(0xFF666666).copy(alpha = 0.80f),
+                Color(0xFFAAAAAA).copy(alpha = 0.60f)
             ),
             start = Offset(0f, 0f),
             end = Offset(w, h)
         ),
         cornerRadius = CornerRadius(16.dp.toPx()),
-        style = Stroke(width = 2.5f)
+        style = Stroke(width = 3.5f)
     )
 
-    // === Layer 9: Inner rim highlight — subtle inset glow ===
+    // === Layer 9: Inner bright chrome highlight — top-left edge catch ===
     drawRoundRect(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = if (isPressed) 0.05f else 0.30f),
+                Color.White.copy(alpha = if (isPressed) 0.10f else 0.75f),
+                Color.White.copy(alpha = 0.25f),
                 Color.Transparent,
-                Color.Transparent,
-                Color.White.copy(alpha = 0.08f)
+                Color.Black.copy(alpha = 0.20f)
             ),
             start = Offset(0f, 0f),
             end = Offset(w, h)
         ),
-        topLeft = Offset(2f, 2f),
-        size = Size(w - 4f, h - 4f),
-        cornerRadius = CornerRadius(14.dp.toPx()),
-        style = Stroke(width = 1.5f)
+        topLeft = Offset(1.5f, 1.5f),
+        size = Size(w - 3f, h - 3f),
+        cornerRadius = CornerRadius(15.dp.toPx()),
+        style = Stroke(width = 2f)
+    )
+
+    // === Layer 10: Inner inset glow — depth inside the chrome bezel ===
+    drawRoundRect(
+        brush = Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = if (isPressed) 0.03f else 0.20f),
+                Color.Transparent,
+                Color.Transparent,
+                Color.White.copy(alpha = 0.06f)
+            ),
+            start = Offset(0f, 0f),
+            end = Offset(w, h)
+        ),
+        topLeft = Offset(4f, 4f),
+        size = Size(w - 8f, h - 8f),
+        cornerRadius = CornerRadius(13.dp.toPx()),
+        style = Stroke(width = 1f)
     )
 }
 
