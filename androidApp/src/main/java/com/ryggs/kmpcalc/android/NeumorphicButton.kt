@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 enum class ButtonType {
-    Number, Function, Operator, Equals
+    Number, Function, Operator, Equals, Clear
 }
 
 @Composable
@@ -272,6 +272,7 @@ private fun getButtonColor(type: ButtonType, isDark: Boolean): Color {
         ButtonType.Function -> if (isDark) CalculatorColors.darkFunctionButton else CalculatorColors.lightFunctionButton
         ButtonType.Operator -> if (isDark) CalculatorColors.darkOperatorButton else CalculatorColors.lightOperatorButton
         ButtonType.Equals -> if (isDark) CalculatorColors.darkEqualsButton else CalculatorColors.lightEqualsButton
+        ButtonType.Clear -> CalculatorColors.clearButton
     }
 }
 
@@ -281,6 +282,7 @@ private fun getButtonTextColor(type: ButtonType, isDark: Boolean): Color {
         ButtonType.Function -> if (isDark) CalculatorColors.darkFunctionText else CalculatorColors.lightFunctionText
         ButtonType.Operator -> if (isDark) CalculatorColors.darkFunctionText else CalculatorColors.lightFunctionText
         ButtonType.Equals -> Color.White
+        ButtonType.Clear -> CalculatorColors.clearButtonText
     }
 }
 

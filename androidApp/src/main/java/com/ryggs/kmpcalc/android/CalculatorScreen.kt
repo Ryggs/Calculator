@@ -1,5 +1,6 @@
 package com.ryggs.kmpcalc.android
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,16 +35,29 @@ fun CalculatorScreen(
     var isDarkThemeEnabled by remember { mutableStateOf<Boolean?>(null) }
     val isDark = isDarkThemeEnabled ?: isSystemInDarkTheme()
 
+    val config = LocalConfiguration.current
+    val isLandscape = config.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     val bodyColor = if (isDark) CalculatorColors.darkBody else CalculatorColors.lightBody
     val displayBg = if (isDark) CalculatorColors.darkDisplayBg else CalculatorColors.lightDisplayBg
     val displayText = if (isDark) CalculatorColors.darkDisplayText else CalculatorColors.lightDisplayText
 
-    // Calculate button size based on screen width to fill exactly 4 columns
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val horizontalPadding = 24.dp
+    val screenWidth = config.screenWidthDp.dp
+    val screenHeight = config.screenHeightDp.dp
+    val horizontalPadding = if (isLandscape) 16.dp else 24.dp
     val availableWidth = screenWidth - (horizontalPadding * 2)
-    val buttonSpacing = 10.dp
-    val buttonSize = (availableWidth - (buttonSpacing * 3)) / 4
+    val buttonSpacing = if (isLandscape) 7.dp else 10.dp
+
+    // Constrain button size so all 5 rows fit vertically in landscape
+    val widthBasedSize = (availableWidth - (buttonSpacing * 3)) / 4
+    val topAreaReserved = if (isLandscape) 72.dp else 52.dp
+    val displayReservedHeight = if (isLandscape) 70.dp else 0.dp
+    val bottomPad = if (isLandscape) 8.dp else 16.dp
+    val topPad = if (isLandscape) 4.dp else 8.dp
+    val gapAboveButtons = if (isLandscape) 8.dp else 20.dp
+    val availableForButtons = screenHeight - topAreaReserved - displayReservedHeight - gapAboveButtons - bottomPad - (buttonSpacing * 4) - topPad
+    val heightBasedSize = availableForButtons / 5
+    val buttonSize = minOf(widthBasedSize, heightBasedSize).coerceAtLeast(36.dp)
 
     Box(
         modifier = Modifier
@@ -56,7 +70,7 @@ fun CalculatorScreen(
                 .padding(horizontal = horizontalPadding)
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(top = 8.dp, bottom = 16.dp),
+                .padding(top = topPad, bottom = bottomPad),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Theme Toggle
@@ -70,77 +84,150 @@ fun CalculatorScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(if (isLandscape) 6.dp else 12.dp))
 
-            // Display — inset LCD look
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f) // Display takes remaining top space
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(displayBg)
-                    .drawWithContent {
-                        drawContent()
-                        // Diagonal glass shine across display
-                        val shinePath = Path().apply {
-                            moveTo(0f, 0f)
-                            lineTo(size.width * 0.65f, 0f)
-                            lineTo(size.width * 0.25f, size.height * 0.55f)
-                            lineTo(0f, size.height * 0.55f)
-                            close()
-                        }
-                        drawPath(
-                            path = shinePath,
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.10f),
-                                    Color.White.copy(alpha = 0.02f)
-                                ),
-                                start = Offset(0f, 0f),
-                                end = Offset(size.width * 0.45f, size.height * 0.45f)
-                            )
-                        )
-                    }
-                    .padding(16.dp),
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = viewModel.expression,
-                        color = displayText.copy(alpha = 0.5f),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Normal,
-                        textAlign = TextAlign.End,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = viewModel.result,
-                        color = displayText,
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.End,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+            // When isResult=true, show expression large (it holds the answer).
+            // When typing, show expression on top and result (live) on bottom.
+            val displayTop = if (viewModel.isResult) "" else viewModel.expression
+            val displayBottom = if (viewModel.isResult) viewModel.expression else viewModel.result
+
+            if (isLandscape) {
+                DisplayPanel(
+                    expression = displayTop,
+                    result = displayBottom,
+                    isLandscape = true,
+                    displayBg = displayBg,
+                    displayText = displayText,
+                    fixedHeight = displayReservedHeight
+                )
+            } else {
+                DisplayPanel(
+                    expression = displayTop,
+                    result = displayBottom,
+                    isLandscape = false,
+                    displayBg = displayBg,
+                    displayText = displayText,
+                    fixedHeight = null,
+                    modifier = Modifier.weight(1f)
+                )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(gapAboveButtons))
 
-            // Button grid — compact, no extra space
             ButtonGrid(
                 isDark = isDark,
                 buttonSize = buttonSize,
                 buttonSpacing = buttonSpacing,
                 viewModel = viewModel
             )
+        }
+    }
+}
+
+@Composable
+private fun DisplayPanel(
+    expression: String,
+    result: String,
+    isLandscape: Boolean,
+    displayBg: Color,
+    displayText: Color,
+    fixedHeight: Dp?,
+    modifier: Modifier = Modifier
+) {
+    val glassModifier = modifier
+        .fillMaxWidth()
+        .clip(RoundedCornerShape(8.dp))
+        .background(displayBg)
+        .drawWithContent {
+            drawContent()
+            val shinePath = Path().apply {
+                moveTo(0f, 0f)
+                lineTo(size.width * 0.65f, 0f)
+                lineTo(size.width * 0.25f, size.height * 0.55f)
+                lineTo(0f, size.height * 0.55f)
+                close()
+            }
+            drawPath(
+                path = shinePath,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.10f),
+                        Color.White.copy(alpha = 0.02f)
+                    ),
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width * 0.45f, size.height * 0.45f)
+                )
+            )
+        }
+
+    if (isLandscape && fixedHeight != null) {
+        Box(
+            modifier = glassModifier
+                .height(fixedHeight)
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (expression.isNotEmpty()) {
+                    Text(
+                        text = expression,
+                        color = displayText.copy(alpha = 0.5f),
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.End,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                }
+                Text(
+                    text = result,
+                    color = displayText,
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    } else {
+        Box(
+            modifier = glassModifier
+                .padding(16.dp),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = expression,
+                    color = displayText.copy(alpha = 0.5f),
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.Normal,
+                    textAlign = TextAlign.End,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = result,
+                    color = displayText,
+                    fontSize = 72.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.End,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
@@ -155,59 +242,40 @@ private fun ButtonGrid(
     Column(
         verticalArrangement = Arrangement.spacedBy(buttonSpacing)
     ) {
-        // Row 1: AC, ←, √, ÷
+        // Row 1: AC, ←, +/-, ÷
         ButtonRow(buttonSpacing) {
-            NeumorphicButton("AC", ButtonType.Function, isDark, { viewModel.onButtonClick("AC") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("←", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("√", ButtonType.Function, isDark, { viewModel.onButtonClick("√") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("÷", ButtonType.Function, isDark, { viewModel.onButtonClick("÷") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("AC",  ButtonType.Clear,    isDark, { viewModel.onButtonClick("AC") },  width = buttonSize, height = buttonSize)
+            NeumorphicButton("←",  ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("+/-",ButtonType.Function, isDark, { viewModel.onButtonClick("+/-") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("÷",  ButtonType.Operator, isDark, { viewModel.onButtonClick("÷") },   width = buttonSize, height = buttonSize)
         }
-
-        // Row 2: 7, 8, 9, −
+        // Row 2: 7, 8, 9, ×
         ButtonRow(buttonSpacing) {
-            NeumorphicButton("7", ButtonType.Number, isDark, { viewModel.onButtonClick("7") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("8", ButtonType.Number, isDark, { viewModel.onButtonClick("8") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("9", ButtonType.Number, isDark, { viewModel.onButtonClick("9") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("−", ButtonType.Operator, isDark, { viewModel.onButtonClick("−") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("7",  ButtonType.Number,   isDark, { viewModel.onButtonClick("7") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("8",  ButtonType.Number,   isDark, { viewModel.onButtonClick("8") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("9",  ButtonType.Number,   isDark, { viewModel.onButtonClick("9") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("×",  ButtonType.Operator, isDark, { viewModel.onButtonClick("×") },   width = buttonSize, height = buttonSize)
         }
-
-        // Row 3: 4, 5, 6, +
+        // Row 3: 4, 5, 6, −
         ButtonRow(buttonSpacing) {
-            NeumorphicButton("4", ButtonType.Number, isDark, { viewModel.onButtonClick("4") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("5", ButtonType.Number, isDark, { viewModel.onButtonClick("5") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("6", ButtonType.Number, isDark, { viewModel.onButtonClick("6") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("+", ButtonType.Operator, isDark, { viewModel.onButtonClick("+") }, width = buttonSize, height = buttonSize)
+            NeumorphicButton("4",  ButtonType.Number,   isDark, { viewModel.onButtonClick("4") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("5",  ButtonType.Number,   isDark, { viewModel.onButtonClick("5") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("6",  ButtonType.Number,   isDark, { viewModel.onButtonClick("6") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("−",  ButtonType.Operator, isDark, { viewModel.onButtonClick("−") },   width = buttonSize, height = buttonSize)
         }
-
-        // Rows 4 & 5 with tall equals
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
-        ) {
-            // Left 3 columns: rows 4 and 5
-            Column(
-                verticalArrangement = Arrangement.spacedBy(buttonSpacing)
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(buttonSpacing)) {
-                    NeumorphicButton("1", ButtonType.Number, isDark, { viewModel.onButtonClick("1") }, width = buttonSize, height = buttonSize)
-                    NeumorphicButton("2", ButtonType.Number, isDark, { viewModel.onButtonClick("2") }, width = buttonSize, height = buttonSize)
-                    NeumorphicButton("3", ButtonType.Number, isDark, { viewModel.onButtonClick("3") }, width = buttonSize, height = buttonSize)
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(buttonSpacing)) {
-                    NeumorphicButton("%", ButtonType.Number, isDark, { viewModel.onButtonClick("%") }, width = buttonSize, height = buttonSize)
-                    NeumorphicButton("0", ButtonType.Number, isDark, { viewModel.onButtonClick("0") }, width = buttonSize, height = buttonSize)
-                    NeumorphicButton(".", ButtonType.Number, isDark, { viewModel.onButtonClick(".") }, width = buttonSize, height = buttonSize)
-                }
-            }
-
-            // Tall equals button
-            NeumorphicButton(
-                text = "=",
-                buttonType = ButtonType.Equals,
-                isDarkTheme = isDark,
-                onClick = { viewModel.onButtonClick("=") },
-                width = buttonSize,
-                height = (buttonSize * 2) + buttonSpacing
-            )
+        // Row 4: 1, 2, 3, +
+        ButtonRow(buttonSpacing) {
+            NeumorphicButton("1",  ButtonType.Number,   isDark, { viewModel.onButtonClick("1") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("2",  ButtonType.Number,   isDark, { viewModel.onButtonClick("2") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("3",  ButtonType.Number,   isDark, { viewModel.onButtonClick("3") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("+",  ButtonType.Operator, isDark, { viewModel.onButtonClick("+") },   width = buttonSize, height = buttonSize)
+        }
+        // Row 5: √, 0, %, =
+        ButtonRow(buttonSpacing) {
+            NeumorphicButton("√",  ButtonType.Function, isDark, { viewModel.onButtonClick("√") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("0",  ButtonType.Number,   isDark, { viewModel.onButtonClick("0") },   width = buttonSize, height = buttonSize)
+            NeumorphicButton("%",  ButtonType.Number,   isDark, { viewModel.onButtonClick("%") },    width = buttonSize, height = buttonSize)
+            NeumorphicButton("=",  ButtonType.Equals,   isDark, { viewModel.onButtonClick("=") },   width = buttonSize, height = buttonSize)
         }
     }
 }
