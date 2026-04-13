@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -60,20 +61,21 @@ fun NeumorphicButton(
     )
 
     val shadowBlur by animateFloatAsState(
-        targetValue = if (isPressed) 2f else 10f,
+        targetValue = if (isPressed) 3f else 14f,
         animationSpec = tween(durationMillis = 100),
         label = "blur"
     )
 
     val shadowOffset by animateFloatAsState(
-        targetValue = if (isPressed) 1f else 6f,
+        targetValue = if (isPressed) 1f else 8f,
         animationSpec = tween(durationMillis = 100),
         label = "offset"
     )
 
     val baseColor = getButtonColor(buttonType, isDarkTheme)
     val textColor = getButtonTextColor(buttonType, isDarkTheme)
-    val shape = RoundedCornerShape(14.dp)
+    val cornerRadius = 16.dp
+    val shape = RoundedCornerShape(cornerRadius)
 
     val lightShadow = if (isDarkTheme) CalculatorColors.darkTopLeftShadow else CalculatorColors.lightTopLeftShadow
     val darkShadow = if (isDarkTheme) CalculatorColors.darkBottomRightShadow else CalculatorColors.lightBottomRightShadow
@@ -85,49 +87,58 @@ fun NeumorphicButton(
                 scaleX = scale
                 scaleY = scale
             }
-            // Neumorphic shadows behind the button
+            // Multi-layered neumorphic shadows for depth
             .drawBehind {
                 drawIntoCanvas { canvas ->
                     val paint = NativePaint().apply {
                         color = android.graphics.Color.TRANSPARENT
                     }
+                    val cr = cornerRadius.toPx()
 
-                    // Bottom-right dark shadow
+                    // Outer dark shadow (bottom-right) — deeper for glassmorphism
                     paint.color = darkShadow.toArgb()
-                    paint.maskFilter = BlurMaskFilter(shadowBlur, BlurMaskFilter.Blur.NORMAL)
+                    paint.maskFilter = BlurMaskFilter(shadowBlur * 1.2f, BlurMaskFilter.Blur.NORMAL)
                     canvas.nativeCanvas.drawRoundRect(
-                        shadowOffset,
-                        shadowOffset,
-                        size.width + shadowOffset,
-                        size.height + shadowOffset,
-                        14.dp.toPx(),
-                        14.dp.toPx(),
-                        paint
+                        shadowOffset * 1.1f,
+                        shadowOffset * 1.1f,
+                        size.width + shadowOffset * 1.1f,
+                        size.height + shadowOffset * 1.1f,
+                        cr, cr, paint
                     )
 
-                    // Top-left light shadow
-                    paint.color = lightShadow.toArgb()
-                    paint.maskFilter = BlurMaskFilter(shadowBlur, BlurMaskFilter.Blur.NORMAL)
+                    // Secondary dark shadow — softer, wider spread
+                    paint.color = darkShadow.copy(alpha = 0.3f).toArgb()
+                    paint.maskFilter = BlurMaskFilter(shadowBlur * 2f, BlurMaskFilter.Blur.NORMAL)
                     canvas.nativeCanvas.drawRoundRect(
-                        -shadowOffset,
-                        -shadowOffset,
-                        size.width - shadowOffset,
-                        size.height - shadowOffset,
-                        14.dp.toPx(),
-                        14.dp.toPx(),
-                        paint
+                        shadowOffset * 0.5f,
+                        shadowOffset * 0.5f,
+                        size.width + shadowOffset * 1.5f,
+                        size.height + shadowOffset * 1.5f,
+                        cr, cr, paint
+                    )
+
+                    // Top-left light shadow — bright highlight
+                    paint.color = lightShadow.toArgb()
+                    paint.maskFilter = BlurMaskFilter(shadowBlur * 1.2f, BlurMaskFilter.Blur.NORMAL)
+                    canvas.nativeCanvas.drawRoundRect(
+                        -shadowOffset * 1.1f,
+                        -shadowOffset * 1.1f,
+                        size.width - shadowOffset * 1.1f,
+                        size.height - shadowOffset * 1.1f,
+                        cr, cr, paint
                     )
                 }
             }
             .clip(shape)
-            // Gradient background — strong top-to-bottom for convex glass dome
+            // Richer gradient background — convex glass dome effect
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        baseColor.lighten(0.18f),
-                        baseColor.lighten(0.05f),
+                        baseColor.lighten(0.25f),
+                        baseColor.lighten(0.12f),
                         baseColor,
-                        baseColor.darken(0.12f)
+                        baseColor.darken(0.08f),
+                        baseColor.darken(0.15f)
                     ),
                     startY = 0f,
                     endY = Float.POSITIVE_INFINITY
@@ -159,66 +170,81 @@ private fun DrawScope.drawGlassOverlay(isPressed: Boolean) {
     val h = size.height
 
     // === Layer 1: Full top-half gloss (the big dome reflection) ===
-    // This is the main "glass" look — a bright wash across the top ~45%
+    // More pronounced for a polished glass/plastic look
     val glossPath = Path().apply {
         moveTo(0f, 0f)
         lineTo(w, 0f)
-        lineTo(w, h * 0.20f)
-        quadraticBezierTo(w * 0.5f, h * 0.52f, 0f, h * 0.38f)
+        lineTo(w, h * 0.18f)
+        quadraticBezierTo(w * 0.5f, h * 0.55f, 0f, h * 0.40f)
         close()
     }
     drawPath(
         path = glossPath,
         brush = Brush.verticalGradient(
             colors = listOf(
-                Color.White.copy(alpha = if (isPressed) 0.15f else 0.40f),
-                Color.White.copy(alpha = if (isPressed) 0.02f else 0.05f)
+                Color.White.copy(alpha = if (isPressed) 0.18f else 0.50f),
+                Color.White.copy(alpha = if (isPressed) 0.03f else 0.08f)
             ),
             startY = 0f,
-            endY = h * 0.50f
+            endY = h * 0.55f
         )
     )
 
     if (!isPressed) {
         // === Layer 2: Curved highlight accent (top-left crescent) ===
+        // Stronger crescent for that polished glass look
         val crescentPath = Path().apply {
             moveTo(0f, 0f)
-            lineTo(w * 0.55f, 0f)
-            quadraticBezierTo(w * 0.18f, h * 0.20f, 0f, h * 0.35f)
+            lineTo(w * 0.60f, 0f)
+            quadraticBezierTo(w * 0.15f, h * 0.22f, 0f, h * 0.38f)
             close()
         }
         drawPath(
             path = crescentPath,
             brush = Brush.linearGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.60f),
+                    Color.White.copy(alpha = 0.70f),
                     Color.White.copy(alpha = 0.0f)
                 ),
                 start = Offset(0f, 0f),
-                end = Offset(w * 0.35f, h * 0.30f)
+                end = Offset(w * 0.40f, h * 0.35f)
             )
         )
 
-        // === Layer 3: Bright specular hotspot ===
+        // === Layer 3: Primary specular hotspot — bright "light source" reflection ===
         drawCircle(
             brush = Brush.radialGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.85f),
-                    Color.White.copy(alpha = 0.25f),
+                    Color.White.copy(alpha = 0.95f),
+                    Color.White.copy(alpha = 0.40f),
                     Color.White.copy(alpha = 0f)
                 ),
-                center = Offset(w * 0.27f, h * 0.17f),
-                radius = w * 0.13f
+                center = Offset(w * 0.25f, h * 0.15f),
+                radius = w * 0.15f
             ),
-            center = Offset(w * 0.27f, h * 0.17f),
-            radius = w * 0.13f
+            center = Offset(w * 0.25f, h * 0.15f),
+            radius = w * 0.15f
         )
 
-        // === Layer 4: Secondary soft reflection (lower-right) ===
+        // === Layer 4: Secondary specular sparkle — smaller, sharper ===
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.90f),
+                    Color.White.copy(alpha = 0f)
+                ),
+                center = Offset(w * 0.22f, h * 0.12f),
+                radius = w * 0.06f
+            ),
+            center = Offset(w * 0.22f, h * 0.12f),
+            radius = w * 0.06f
+        )
+
+        // === Layer 5: Secondary soft reflection (lower-right) ===
         val secondaryPath = Path().apply {
             moveTo(w, h)
-            lineTo(w * 0.50f, h)
-            quadraticBezierTo(w * 0.75f, h * 0.78f, w, h * 0.70f)
+            lineTo(w * 0.45f, h)
+            quadraticBezierTo(w * 0.70f, h * 0.75f, w, h * 0.65f)
             close()
         }
         drawPath(
@@ -226,43 +252,94 @@ private fun DrawScope.drawGlassOverlay(isPressed: Boolean) {
             brush = Brush.linearGradient(
                 colors = listOf(
                     Color.White.copy(alpha = 0.0f),
-                    Color.White.copy(alpha = 0.12f)
+                    Color.White.copy(alpha = 0.18f)
                 ),
-                start = Offset(w * 0.50f, h * 0.85f),
+                start = Offset(w * 0.45f, h * 0.80f),
                 end = Offset(w, h)
             )
         )
+
+        // === Layer 6: Inner glow around edge — warm diffused light ===
+        drawRoundRect(
+            brush = Brush.radialGradient(
+                colors = listOf(
+                    Color.Transparent,
+                    Color.White.copy(alpha = 0.08f),
+                    Color.White.copy(alpha = 0.15f)
+                ),
+                center = Offset(w * 0.5f, h * 0.5f),
+                radius = w * 0.8f
+            ),
+            cornerRadius = CornerRadius(16.dp.toPx()),
+            style = Stroke(width = 6f)
+        )
     }
 
-    // === Layer 5: Bottom edge reflected light ===
+    // === Layer 7: Bottom edge reflected light — polished base reflection ===
     drawRect(
         brush = Brush.verticalGradient(
             colors = listOf(
                 Color.Transparent,
-                Color.White.copy(alpha = 0.15f)
+                Color.White.copy(alpha = 0.20f)
             ),
-            startY = h * 0.85f,
+            startY = h * 0.82f,
             endY = h
         ),
-        topLeft = Offset(0f, h * 0.85f),
-        size = Size(w, h * 0.15f)
+        topLeft = Offset(0f, h * 0.82f),
+        size = Size(w, h * 0.18f)
     )
 
-    // === Layer 6: Glass rim border ===
-    // Top-left bright, bottom-right dark — like light hitting a glass edge
+    // === Layer 8: Outer chrome border — thick metallic rim ===
+    // Dark surround to simulate a chrome/silver bezel
     drawRoundRect(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color.White.copy(alpha = 0.50f),
-                Color.White.copy(alpha = 0.10f),
-                Color.Transparent,
-                Color.Black.copy(alpha = 0.10f)
+                Color(0xFFC0C0C0).copy(alpha = 0.90f),
+                Color(0xFF888888).copy(alpha = 0.70f),
+                Color(0xFF666666).copy(alpha = 0.80f),
+                Color(0xFFAAAAAA).copy(alpha = 0.60f)
             ),
             start = Offset(0f, 0f),
             end = Offset(w, h)
         ),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(14.dp.toPx()),
+        cornerRadius = CornerRadius(16.dp.toPx()),
+        style = Stroke(width = 3.5f)
+    )
+
+    // === Layer 9: Inner bright chrome highlight — top-left edge catch ===
+    drawRoundRect(
+        brush = Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = if (isPressed) 0.10f else 0.75f),
+                Color.White.copy(alpha = 0.25f),
+                Color.Transparent,
+                Color.Black.copy(alpha = 0.20f)
+            ),
+            start = Offset(0f, 0f),
+            end = Offset(w, h)
+        ),
+        topLeft = Offset(1.5f, 1.5f),
+        size = Size(w - 3f, h - 3f),
+        cornerRadius = CornerRadius(15.dp.toPx()),
         style = Stroke(width = 2f)
+    )
+
+    // === Layer 10: Inner inset glow — depth inside the chrome bezel ===
+    drawRoundRect(
+        brush = Brush.linearGradient(
+            colors = listOf(
+                Color.White.copy(alpha = if (isPressed) 0.03f else 0.20f),
+                Color.Transparent,
+                Color.Transparent,
+                Color.White.copy(alpha = 0.06f)
+            ),
+            start = Offset(0f, 0f),
+            end = Offset(w, h)
+        ),
+        topLeft = Offset(4f, 4f),
+        size = Size(w - 8f, h - 8f),
+        cornerRadius = CornerRadius(13.dp.toPx()),
+        style = Stroke(width = 1f)
     )
 }
 
