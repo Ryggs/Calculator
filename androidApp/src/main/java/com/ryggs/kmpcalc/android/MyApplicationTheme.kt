@@ -8,28 +8,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 object CalculatorColors {
-    val lightBody = Color(0xFFE4E4E4)
+    // Light theme — silver/chrome glassmorphism
+    val lightBody = Color(0xFFDCDCDC)
     val lightDisplayBg = Color(0xFFAAAAAA)
     val lightDisplayText = Color(0xFF2D2D2D)
-    val lightNumberButton = Color(0xFFE4E4E4)
-    val lightFunctionButton = Color(0xFF6496E0)
-    val lightOperatorButton = Color(0xFF6496E0)
-    val lightEqualsButton = Color(0xFFF56B7B)
+    val lightNumberButton = Color(0xFFD8D8D8)
+    val lightFunctionButton = Color(0xFF5A8FD4)
+    val lightOperatorButton = Color(0xFF5A8FD4)
+    val lightEqualsButton = Color(0xFFE8404F)
     val lightButtonText = Color(0xFF333333)
     val lightFunctionText = Color(0xFF1A3060)
-    val lightTopLeftShadow = Color(0xFFFAFAFA)
-    val lightBottomRightShadow = Color(0xFFBEBEBE)
+    val lightTopLeftShadow = Color(0xFFF8F8F8)
+    val lightBottomRightShadow = Color(0xFFAAAAAA)
+
+    // Dark theme
     val darkBody = Color(0xFF3D3D3D)
     val darkDisplayBg = Color(0xFF909090)
     val darkDisplayText = Color(0xFF2D2D2D)
     val darkNumberButton = Color(0xFFDCDCDC)
     val darkFunctionButton = Color(0xFFDEA820)
     val darkOperatorButton = Color(0xFFDEA820)
-    val darkEqualsButton = Color(0xFFF56B7B)
+    val darkEqualsButton = Color(0xFFE8404F)
     val darkButtonText = Color(0xFF333333)
     val darkFunctionText = Color(0xFF4A3000)
     val darkTopLeftShadow = Color(0xFF505050)
     val darkBottomRightShadow = Color(0xFF262626)
+
     val clearButton = Color(0xFFD32F2F)
     val clearButtonText = Color.White
 }

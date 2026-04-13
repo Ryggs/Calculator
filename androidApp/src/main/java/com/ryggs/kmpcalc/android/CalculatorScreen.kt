@@ -239,43 +239,54 @@ private fun ButtonGrid(
     buttonSpacing: Dp,
     viewModel: CalculatorViewModel
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(buttonSpacing)
-    ) {
-        // Row 1: AC, ←, +/-, ÷
-        ButtonRow(buttonSpacing) {
-            NeumorphicButton("AC",  ButtonType.Clear,    isDark, { viewModel.onButtonClick("AC") },  width = buttonSize, height = buttonSize)
-            NeumorphicButton("←",  ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("+/-",ButtonType.Function, isDark, { viewModel.onButtonClick("+/-") }, width = buttonSize, height = buttonSize)
-            NeumorphicButton("÷",  ButtonType.Operator, isDark, { viewModel.onButtonClick("÷") },   width = buttonSize, height = buttonSize)
-        }
-        // Row 2: 7, 8, 9, ×
-        ButtonRow(buttonSpacing) {
-            NeumorphicButton("7",  ButtonType.Number,   isDark, { viewModel.onButtonClick("7") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("8",  ButtonType.Number,   isDark, { viewModel.onButtonClick("8") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("9",  ButtonType.Number,   isDark, { viewModel.onButtonClick("9") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("×",  ButtonType.Operator, isDark, { viewModel.onButtonClick("×") },   width = buttonSize, height = buttonSize)
-        }
-        // Row 3: 4, 5, 6, −
-        ButtonRow(buttonSpacing) {
-            NeumorphicButton("4",  ButtonType.Number,   isDark, { viewModel.onButtonClick("4") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("5",  ButtonType.Number,   isDark, { viewModel.onButtonClick("5") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("6",  ButtonType.Number,   isDark, { viewModel.onButtonClick("6") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("−",  ButtonType.Operator, isDark, { viewModel.onButtonClick("−") },   width = buttonSize, height = buttonSize)
-        }
-        // Row 4: 1, 2, 3, +
-        ButtonRow(buttonSpacing) {
-            NeumorphicButton("1",  ButtonType.Number,   isDark, { viewModel.onButtonClick("1") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("2",  ButtonType.Number,   isDark, { viewModel.onButtonClick("2") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("3",  ButtonType.Number,   isDark, { viewModel.onButtonClick("3") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("+",  ButtonType.Operator, isDark, { viewModel.onButtonClick("+") },   width = buttonSize, height = buttonSize)
-        }
-        // Row 5: √, 0, %, =
-        ButtonRow(buttonSpacing) {
-            NeumorphicButton("√",  ButtonType.Function, isDark, { viewModel.onButtonClick("√") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("0",  ButtonType.Number,   isDark, { viewModel.onButtonClick("0") },   width = buttonSize, height = buttonSize)
-            NeumorphicButton("%",  ButtonType.Number,   isDark, { viewModel.onButtonClick("%") },    width = buttonSize, height = buttonSize)
-            NeumorphicButton("=",  ButtonType.Equals,   isDark, { viewModel.onButtonClick("=") },   width = buttonSize, height = buttonSize)
+    val equalsHeight = buttonSize * 2 + buttonSpacing
+
+    Row {
+        // Left side: 5 rows × 3 columns + operator column
+        Column(
+            verticalArrangement = Arrangement.spacedBy(buttonSpacing)
+        ) {
+            // Row 1: AC, ←, √, ÷
+            ButtonRow(buttonSpacing) {
+                NeumorphicButton("AC", ButtonType.Function,  isDark, { viewModel.onButtonClick("AC") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("←", ButtonType.Function, isDark, { viewModel.onButtonClick("⌫") },  width = buttonSize, height = buttonSize)
+                NeumorphicButton("√",  ButtonType.Function, isDark, { viewModel.onButtonClick("√") },  width = buttonSize, height = buttonSize)
+                NeumorphicButton("÷",  ButtonType.Operator, isDark, { viewModel.onButtonClick("÷") },  width = buttonSize, height = buttonSize)
+            }
+            // Row 2: 7, 8, 9, −
+            ButtonRow(buttonSpacing) {
+                NeumorphicButton("7", ButtonType.Number,   isDark, { viewModel.onButtonClick("7") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("8", ButtonType.Number,   isDark, { viewModel.onButtonClick("8") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("9", ButtonType.Number,   isDark, { viewModel.onButtonClick("9") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("−", ButtonType.Operator, isDark, { viewModel.onButtonClick("−") }, width = buttonSize, height = buttonSize)
+            }
+            // Row 3: 4, 5, 6, +
+            ButtonRow(buttonSpacing) {
+                NeumorphicButton("4", ButtonType.Number,   isDark, { viewModel.onButtonClick("4") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("5", ButtonType.Number,   isDark, { viewModel.onButtonClick("5") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("6", ButtonType.Number,   isDark, { viewModel.onButtonClick("6") }, width = buttonSize, height = buttonSize)
+                NeumorphicButton("+", ButtonType.Operator, isDark, { viewModel.onButtonClick("+") }, width = buttonSize, height = buttonSize)
+            }
+            // Rows 4-5: 1,2,3 / %,0,. on left; tall = on right
+            Row(horizontalArrangement = Arrangement.spacedBy(buttonSpacing)) {
+                // Left 3 columns: two stacked rows
+                Column(verticalArrangement = Arrangement.spacedBy(buttonSpacing)) {
+                    // Row 4: 1, 2, 3
+                    ButtonRow(buttonSpacing) {
+                        NeumorphicButton("1", ButtonType.Number, isDark, { viewModel.onButtonClick("1") }, width = buttonSize, height = buttonSize)
+                        NeumorphicButton("2", ButtonType.Number, isDark, { viewModel.onButtonClick("2") }, width = buttonSize, height = buttonSize)
+                        NeumorphicButton("3", ButtonType.Number, isDark, { viewModel.onButtonClick("3") }, width = buttonSize, height = buttonSize)
+                    }
+                    // Row 5: %, 0, .
+                    ButtonRow(buttonSpacing) {
+                        NeumorphicButton("%", ButtonType.Number,   isDark, { viewModel.onButtonClick("%") }, width = buttonSize, height = buttonSize)
+                        NeumorphicButton("0", ButtonType.Number,   isDark, { viewModel.onButtonClick("0") }, width = buttonSize, height = buttonSize)
+                        NeumorphicButton(".", ButtonType.Number,   isDark, { viewModel.onButtonClick(".") }, width = buttonSize, height = buttonSize)
+                    }
+                }
+                // Tall equals button spanning rows 4-5
+                NeumorphicButton("=", ButtonType.Equals, isDark, { viewModel.onButtonClick("=") }, width = buttonSize, height = equalsHeight)
+            }
         }
     }
 }
