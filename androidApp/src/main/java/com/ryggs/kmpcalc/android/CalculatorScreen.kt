@@ -194,14 +194,12 @@ private fun DisplayPanel(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
-                Text(
+                AutoSizeText(
                     text = result,
                     color = displayText,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.End,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxFontSize = 32.sp,
+                    minFontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -226,19 +224,49 @@ private fun DisplayPanel(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
+                AutoSizeText(
                     text = result,
                     color = displayText,
-                    fontSize = 72.sp,
+                    maxFontSize = 72.sp,
+                    minFontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.End,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
+}
+
+@Composable
+private fun AutoSizeText(
+    text: String,
+    color: Color,
+    maxFontSize: androidx.compose.ui.unit.TextUnit,
+    minFontSize: androidx.compose.ui.unit.TextUnit,
+    fontWeight: FontWeight,
+    modifier: Modifier = Modifier
+) {
+    var fontSize by remember(text) { mutableStateOf(maxFontSize) }
+    var readyToDraw by remember(text) { mutableStateOf(false) }
+
+    Text(
+        text = text,
+        color = color,
+        fontSize = fontSize,
+        fontWeight = fontWeight,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Visible,
+        softWrap = false,
+        modifier = modifier.drawWithContent { if (readyToDraw) drawContent() },
+        onTextLayout = { result ->
+            if (result.hasVisualOverflow && fontSize > minFontSize) {
+                fontSize = (fontSize.value * 0.85f).coerceAtLeast(minFontSize.value).sp
+            } else {
+                readyToDraw = true
+            }
+        }
+    )
 }
 
 @Composable
