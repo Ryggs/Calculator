@@ -1,6 +1,7 @@
 package com.ryggs.kmpcalc.android
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +34,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun CalculatorScreen(
     viewModel: CalculatorViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(viewModel.limitToastTrigger) {
+        if (viewModel.limitToastTrigger > 0) {
+            Toast.makeText(context, "Can't enter more than 15 digits.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     var isDarkThemeEnabled by remember { mutableStateOf<Boolean?>(null) }
     val isDark = isDarkThemeEnabled ?: isSystemInDarkTheme()
 
@@ -88,8 +97,8 @@ fun CalculatorScreen(
 
             // When isResult=true, show expression large (it holds the answer).
             // When typing, show expression on top and result (live) on bottom.
-            val displayTop = if (viewModel.isResult) "" else viewModel.expression
-            val displayBottom = if (viewModel.isResult) viewModel.expression else viewModel.result
+            val displayTop = if (viewModel.isResult) "" else viewModel.formattedExpression
+            val displayBottom = if (viewModel.isResult) viewModel.formattedExpression else viewModel.formattedResult
 
             if (isLandscape) {
                 DisplayPanel(
@@ -185,14 +194,12 @@ private fun DisplayPanel(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                 }
-                Text(
+                AutoSizeText(
                     text = result,
                     color = displayText,
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.End,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    maxFontSize = 32.sp,
+                    minFontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -217,19 +224,49 @@ private fun DisplayPanel(
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
+                AutoSizeText(
                     text = result,
                     color = displayText,
-                    fontSize = 72.sp,
+                    maxFontSize = 72.sp,
+                    minFontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.End,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         }
     }
+}
+
+@Composable
+private fun AutoSizeText(
+    text: String,
+    color: Color,
+    maxFontSize: androidx.compose.ui.unit.TextUnit,
+    minFontSize: androidx.compose.ui.unit.TextUnit,
+    fontWeight: FontWeight,
+    modifier: Modifier = Modifier
+) {
+    var fontSize by remember(text) { mutableStateOf(maxFontSize) }
+    var readyToDraw by remember(text) { mutableStateOf(false) }
+
+    Text(
+        text = text,
+        color = color,
+        fontSize = fontSize,
+        fontWeight = fontWeight,
+        textAlign = TextAlign.End,
+        maxLines = 1,
+        overflow = TextOverflow.Visible,
+        softWrap = false,
+        modifier = modifier.drawWithContent { if (readyToDraw) drawContent() },
+        onTextLayout = { result ->
+            if (result.hasVisualOverflow && fontSize > minFontSize) {
+                fontSize = (fontSize.value * 0.85f).coerceAtLeast(minFontSize.value).sp
+            } else {
+                readyToDraw = true
+            }
+        }
+    )
 }
 
 @Composable
