@@ -1,6 +1,7 @@
 package com.ryggs.kmpcalc.android
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -32,6 +34,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun CalculatorScreen(
     viewModel: CalculatorViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(viewModel.limitToastTrigger) {
+        if (viewModel.limitToastTrigger > 0) {
+            Toast.makeText(context, "Can't enter more than 15 digits.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     var isDarkThemeEnabled by remember { mutableStateOf<Boolean?>(null) }
     val isDark = isDarkThemeEnabled ?: isSystemInDarkTheme()
 

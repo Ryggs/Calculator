@@ -19,11 +19,15 @@ class CalculatorViewModel : ViewModel() {
     var isResult by mutableStateOf(false)
         private set
 
+    var limitToastTrigger by mutableStateOf(0)
+        private set
+
     fun onButtonClick(value: String) {
         engine.onButtonClick(value)
         expression = engine.expression
         result = engine.result
         isResult = engine.isResult
+        if (engine.limitReached) limitToastTrigger++
     }
 
     val formattedExpression: String get() = formatForDisplay(expression)
