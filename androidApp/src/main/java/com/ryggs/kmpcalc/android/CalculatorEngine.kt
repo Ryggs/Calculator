@@ -19,12 +19,16 @@ class CalculatorEngine {
     var isResult: Boolean = false
         private set
 
+    var limitReached: Boolean = false
+        private set
+
     private var lastResult: String = ""
     private var hasEvaluated = false
     private var lastOperator: String = ""
     private var lastOperand: String = ""
 
     fun onButtonClick(value: String) {
+        limitReached = false
         when (value) {
             "AC"  -> clear()
             "⌫"  -> backspace()
@@ -68,6 +72,14 @@ class CalculatorEngine {
             if (currentNumber.contains(".")) return
             if (currentNumber.isEmpty()) {
                 expression += "0."
+                return
+            }
+        }
+
+        if (digit != ".") {
+            val currentNumber = expression.split(Regex("[+\\-×÷()]")).lastOrNull() ?: ""
+            if (currentNumber.count { it.isDigit() } >= 15) {
+                limitReached = true
                 return
             }
         }
