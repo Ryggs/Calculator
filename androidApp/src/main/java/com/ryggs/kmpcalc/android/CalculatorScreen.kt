@@ -88,8 +88,8 @@ fun CalculatorScreen(
 
             // When isResult=true, show expression large (it holds the answer).
             // When typing, show expression on top and result (live) on bottom.
-            val displayTop = if (viewModel.isResult) "" else viewModel.expression
-            val displayBottom = if (viewModel.isResult) viewModel.expression else viewModel.result
+            val displayTop = if (viewModel.isResult) "" else viewModel.formattedExpression
+            val displayBottom = if (viewModel.isResult) viewModel.formattedExpression else viewModel.formattedResult
 
             if (isLandscape) {
                 DisplayPanel(

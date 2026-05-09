@@ -72,6 +72,11 @@ class CalculatorEngine {
             }
         }
 
+        if (digit != ".") {
+            val currentNumber = expression.split(Regex("[+\\-×÷()]")).lastOrNull() ?: ""
+            if (currentNumber.count { it.isDigit() } >= 15) return
+        }
+
         expression += digit
     }
 
